@@ -1,0 +1,484 @@
+# The 8 Puzzle Game
+# The8PuzzleGame.py
+# Brandon Terrell Durrington
+# M6
+# btdurrin
+
+from graphics import *
+from random import *
+
+
+
+class Block:##(CLOD)
+    def __init__(self,p1,p2,p3,text,color):
+        self.p1=p1
+        self.p2=p2
+        self.p3=p3
+        self.color=color
+        self.text=Text(self.p3,text)
+        self.block=Rectangle(self.p1,self.p2)
+        
+    def draw(self,win):
+        self.block.setFill(self.color)
+        self.block.draw(win)
+        self.text.draw(win)
+        
+    def move(self,x,y):
+        self.block.move(x,y)
+        self.text.move(x,y)
+        
+        self.p1=Point(self.p1.getX()+x,self.p1.getY()+y)
+        self.p2=Point(self.p2.getX()+x,self.p2.getY()+y)
+        self.p3=Point(self.p3.getX()+x,self.p3.getY()+y)
+        
+    def checkClick(self,clickedPoint):
+        x=clickedPoint.getX()
+        y=clickedPoint.getY()
+        
+        if self.p1.getX()<=x<=self.p2.getX() and self.p1.getY()<=y<=self.p2.getY():
+            return True
+        
+        else:
+            return False
+        
+        
+
+def firstGraphicWindow(winName,xPixels,yPixels,color,xInitialC,yInitialC,xFinalC,yFinalC,xPointT,yPointT,nameText,font,pNameXPoint,pNameYPoint,
+                       pNameName,pNEBX,pNEBY,pNEBF,sButtonXInitial,sButtonYInital,sButtonXFinal,sButtonYFinal,sBTX,sBTY,sBTN):
+    ###Setting up graphic window for the whole program and displaying welcome text and entry box stuff
+    win=GraphWin(winName,xPixels,yPixels)##(GW)
+    win.setBackground(color)
+    win.setCoords(xInitialC,yInitialC,xFinalC,yFinalC)
+    
+    welcomeText=Text(Point(xPointT,yPointT),nameText)##(OTXT)
+    welcomeText.setFace(font)
+    welcomeText.draw(win)
+    
+    playerNameText=Text(Point(pNameXPoint,pNameYPoint),pNameName)
+    playerNameText.setFace(font)
+    playerNameText.draw(win)
+    
+    playerNameEntryBox=Entry(Point(pNEBX,pNEBY),pNEBF)
+    playerNameEntryBox.setFill(color)
+    playerNameEntryBox.draw(win)
+    
+    submitButton=Rectangle(Point(sButtonXInitial,sButtonYInital),Point(sButtonXFinal,sButtonYFinal))
+    submitButton.draw(win)
+    submitButtonText=Text(Point(sBTX,sBTY),sBTN)
+    submitButtonText.setFace(font)
+    submitButtonText.draw(win)
+    
+    return win,welcomeText,playerNameText,playerNameEntryBox,submitButton,submitButtonText
+
+
+def infileOpen(playerNameEntryBox):
+    #Getting text in entry box and opening file
+    playerName=playerNameEntryBox.getText()##(IEB)
+    playerNameLength=len(playerName)
+    infile=open("HardHighScoreList.txt","r")
+    infileRead=infile.readlines()##(IFL)
+    
+    return playerName,playerNameLength,infile,infileRead
+
+
+def lineInfileReadOne(line,playerNameLength,lineLength,playerName,win):
+    #Telling the users high score that was typed
+    score=line[playerNameLength+1:lineLength]
+    playerNameScores=playerName+"'s Easy High Score: \n"+score+" Moves"
+    highscoreText=Text(Point(6.25,4.75),playerNameScores)
+    highscoreText.setFace("courier")
+    highscoreText.draw(win)
+    playerNameFinal=line[0:playerNameLength]
+    playerName1=playerNameFinal
+            
+    return highscoreText,playerNameFinal,win,playerName1
+        
+
+def submitError(submitButton,submitButtonText,win):
+    #Telling the user an error occurred for submittal
+    submitButton=submitButton.undraw()
+    submitButtonText=submitButtonText.undraw()
+    submitButtonError=Rectangle(Point(3.125,3.875),Point(4.875,4.5625))
+    submitButtonError.draw(win)
+    submitButtonErrorText=Text(Point(4,4.25),"Player already\nhas a Easy\nHigh Score!")
+    submitButtonErrorText.setFace("courier")
+    submitButtonErrorText.setTextColor("red")
+    submitButtonErrorText.draw(win)
+    
+    return submitButton,submitButtonText,submitButtonError,submitButtonErrorText,win
+
+
+def introScreenReset(infile,win,highscoreText,submitButtonError,submitButtonErrorText):
+    #Closing infile and going back to original screen
+    infile.close()
+    win.getMouse()
+    highscoreText=highscoreText.undraw()
+    submitButtonError=submitButtonError.undraw()
+    submitButtonErrorText=submitButtonErrorText.undraw()
+    submitButton=Rectangle(Point(3.5,3.875),Point(4.5,4.375))
+    submitButton.draw(win)
+    submitButtonText=Text(Point(4,4.125),"Submit")
+    submitButtonText.setFace("courier")
+    submitButtonText.draw(win)
+    
+    return win,highscoreText,submitButtonError,submitButtonErrorText,submitButton,submitButtonText
+
+
+def secondScreen(playerNameText,playerNameEntryBox,submitButton,submitButtonText,win):
+    #Getting player name and undrawing intro screen and drawing second screen
+    playerName=playerNameEntryBox.getText()
+    playerNameText.undraw()
+    playerNameEntryBox.undraw()
+    submitButton.undraw()
+    submitButtonText.undraw()
+        
+    directionsText=("Hello",playerName,"What difficulty would you like to play on?\nOnly Easy will be recorded for the High Score list."
+                                                        " The goal of\n this game is to get the pieces to appear in\n ascending order with one click of the mouse. Good Luck!\n"
+                                                        "Click empty space first!")
+    directions=Text(Point(4,5),directionsText)
+    directions.setFace("courier")
+    directions.draw(win)
+        
+    easyBox=Rectangle(Point(3,3),Point(5,3.5))
+    easyBoxText=Text(Point(4,3.25),"EASY")
+    easyBoxText.setFace("courier")
+    easyBox.draw(win)
+    easyBoxText.draw(win)
+
+    return playerName,directions,easyBox,easyBoxText,win
+
+
+
+def allBlocks(win):
+    #Defines all blocks and board
+    
+    blockBoard=Block(Point(2.5,.5),Point(5.5,3.5),Point(0,0),"","white")
+    blockOne=Block(Point(2.5,2.5),Point(3.5,3.5),Point(3,3),"1","orange")
+    blockTwo=Block(Point(3.5,2.5),Point(4.5,3.5),Point(4,3),"2","grey")
+    blockThree=Block(Point(4.5,2.5),Point(5.5,3.5),Point(5,3),"3","yellow")
+    blockFour=Block(Point(2.5,1.5),Point(3.5,2.5),Point(3,2),"4","lightblue")
+    blockFive=Block(Point(3.5,1.5),Point(4.5,2.5),Point(4,2),"5","blue")
+    blockSix=Block(Point(4.5,1.5),Point(5.5,2.5),Point(5,2),"6","red")
+    blockSeven=Block(Point(2.5,.5),Point(3.5,1.5),Point(3,1),"7","darkgreen")
+    blockEight=Block(Point(3.5,.5),Point(4.5,1.5),Point(4,1),"8","lightgreen")
+    whiteSpace=Block(Point(4.5,.5),Point(5.5,1.5),Point(5,1),"","white")
+        
+    blockBoard.draw(win)
+    blockOne.draw(win)
+    blockTwo.draw(win)
+    blockThree.draw(win)
+    blockFour.draw(win)
+    blockFive.draw(win)
+    blockSix.draw(win)
+    blockSeven.draw(win)
+    blockEight.draw(win)
+    whiteSpace.draw(win)
+    
+    blockList=[blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace]##(LOOD)
+
+    return blockBoard,blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace,blockList
+
+
+def moveDirectionsLEFT(blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace):
+    moveDirectionOne=randrange(1,2)##(RND)
+    
+    if moveDirectionOne == 2:#LEFT
+        blockEight.move(1,0)
+        whiteSpace.move(-1,0)
+        moveDirectionTwo=randrange(1,3)
+            
+        if moveDirectionTwo == 1:#LEFT-UP
+            blockFive.move(0,-1)
+            whiteSpace.move(0,1)
+            
+        if moveDirectionTwo == 2:#LEFT-LEFT
+            blockSeven.move(1,0)
+            whiteSpace.move(-1,0)
+            
+
+def moveDirectionsUP(blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace):
+    moveDirectionOne=randrange(1,2)
+        
+    if moveDirectionOne == 1:#UP
+        blockSix.move(0,-1)
+        whiteSpace.move(0,1)
+        moveDirectionTwo=randrange(1,3)
+            
+        if moveDirectionTwo == 1:#UP-UP
+            blockThree.move(0,-1)
+            whiteSpace.move(0,1)
+            moveDirectionThree=randrange(1,2)
+                
+            if moveDirectionThree == 1:#UP-UP-LEFT
+                blockTwo.move(1,0)
+                whiteSpace.move(-1,0)
+                
+        if moveDirectionTwo == 2:#UP-LEFT
+            blockFive.move(1,0)
+            whiteSpace.move(-1,0)
+            moveDirectionFour=randrange(1,3)
+                
+            if moveDirectionFour == 1:#UP-LEFT-UP
+                blockTwo.move(0,-1)
+                whiteSpace.move(0,1)
+                moveDirectionFive=randrange(1,3)
+                    
+                if moveDirectionFive == 1:#UP-LEFT-UP-LEFT
+                    blockOne.move(1,0)
+                    whiteSpace.move(-1,0)
+                    
+                if moveDirectionFive == 2:#UP-LEFT-UP-RIGHT
+                    blockThree.move(-1,0)
+                    whiteSpace.move(1,0)
+                    
+            if moveDirectionFour == 2:#UP-LEFT-LEFT
+                blockFour.move(1,0)
+                whiteSpace.move(-1,0)
+                moveDirectionSix=randrange(1,3)
+                    
+                if moveDirectionSix == 1:#UP-LEFT-LEFT-UP
+                    blockOne.move(0,-1)
+                    whiteSpace.move(0,1)
+                    
+                if moveDirectionSix == 2:#UP-LEFT-LEFT-DOWN
+                    blockSeven.move(0,1)
+                    whiteSpace.move(0,-1)
+                    
+
+def puzzleGenerator(win,difficulty):
+    #Works through the puzzle backwards to "randomize" the puzzle depending on difficulty
+    blockBoard,blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace,blockList=allBlocks(win)
+    
+    if difficulty == "easy":
+        
+        moveDirectionsUP(blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace)
+        
+        moveDirectionsLEFT(blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace)
+
+    return win,blockList,blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace
+        
+
+def difficulty(win,directions,easyBox,easyBoxText):
+    #Determing which difficulty is clicked
+    clickedPointFive=win.getMouse()
+    if clickedPointFive.getX()>=3 and clickedPointFive.getX()<=5 and clickedPointFive.getY()>=3 and clickedPointFive.getY()<=3.5:
+        directions.undraw()
+        easyBox.undraw()
+        easyBoxText.undraw()
+        win,blockList,blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace=puzzleGenerator(win,"easy")
+#    elif clickedPointFive.getX()>=3 and clickedPointFive.getX()<=5 and clickedPointFive.getY()>=2 and clickedPointFive.getY()<=2.5:
+#        directions.undraw()
+#        easyBox.undraw()
+#        easyBoxText.undraw()
+#        normalBox.undraw()
+#        normalBoxText.undraw()
+#        hardBox.undraw()
+#        hardBoxText.undraw()
+#        win=puzzleGenerator(win,"normal")
+#    elif clickedPointFive.getX()>=3 and clickedPointFive.getX()<=5 and clickedPointFive.getY()>=1 and clickedPointFive.getY()<=1.5:
+#        directions.undraw()
+#        easyBox.undraw()
+#        easyBoxText.undraw()
+#        normalBox.undraw()
+#        normalBoxText.undraw()
+#        hardBox.undraw()
+#        hardBoxText.undraw()
+#        win=puzzleGenerator(win,"hard")
+        
+        return win,blockList,blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace
+    
+
+def originalPuzzle(blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace):
+    counter=0
+    if str(blockOne.p3) == str(Point(3.0, 3.0)):
+        counter=counter+1
+        
+    if str(blockTwo.p3) == str(Point(4.0, 3.0)):
+        counter=counter+1
+        
+    if str(blockThree.p3) == str(Point(5.0, 3.0)):
+        counter=counter+1
+        
+    if str(blockFour.p3) == str(Point(3.0, 2.0)):
+        counter=counter+1
+        
+    if str(blockFive.p3) == str(Point(4.0, 2.0)):
+        counter=counter+1
+        
+    if str(blockSix.p3) == str(Point(5.0, 2.0)):
+        counter=counter+1
+        
+    if str(blockSeven.p3) == str(Point(3.0, 1.0)):
+        counter=counter+1
+        
+    if str(blockEight.p3) == str(Point(4.0, 1.0)):
+        counter=counter+1
+        
+    if str(whiteSpace.p3) == str(Point(5.0, 1.0)):
+        counter=counter+1
+        
+   
+    
+   
+    if counter == 9:
+        return True
+    else:
+        return False
+    
+def congrats(playerName,moves,win):
+    congratsText=Text(Point(4,5),"CONGRATULATIONS "+playerName+" you have completed\n The 8 Puzzle Game Easy Difficulty"
+        "in "+str(moves)+" Moves!\n Your Hard High Score will be saved.")
+        
+    
+    congratsText.setFace("courier")
+    congratsText.draw(win)
+    
+    infile=open("HardHighScoreList.txt","r")
+    infileRead=infile.readlines()
+    infile.close()
+    
+    outfile=open("HardHighScoreList.txt","w")##(OFL)
+    for line in infileRead:
+        print(line,end="",file=outfile)
+    print()
+    print(playerName+" "+str(moves),file=outfile)
+    outfile.close()
+    
+
+
+    
+def finalGame(win,blockList,blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace):
+    moves=0
+    moveCounter=Text(Point(4,4),str(moves)+" Moves")
+    moveCounter.draw(win)
+    illegalMove=Text(Point(4,5),"Illegal move.")
+    illegalMove.setFace("courier")
+    illegalMove.setFill("red")
+    
+    x=False
+    while x != True:
+        valid=moving(win,blockList,illegalMove)
+        x=originalPuzzle(blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace)
+        if valid == True:
+            moves=moves+1
+            moveCounter.setText(str(moves)+" Moves")
+        
+    return moves
+
+
+def moving(win,blockList,illegalMove):
+    
+    clickedPoint=win.getMouse()
+    illegalMove.undraw()
+    for i in range(0,9):
+        block=blockList[i]
+        if block.checkClick(clickedPoint):
+            white=block
+    
+    clickedPointOne=win.getMouse()
+    for k in range(0,9):
+        block=blockList[k]
+        if block.checkClick(clickedPointOne):
+            moving=block
+    
+    if white.p3.getX() == moving.p3.getX()+1 and white.p3.getY() == moving.p3.getY():
+        white.move(-1,0)
+        moving.move(1,0)
+        return True
+    elif white.p3.getX() == moving.p3.getX()-1 and white.p3.getY() == moving.p3.getY():
+        white.move(1,0)
+        moving.move(-1,0)
+        return True
+    elif white.p3.getY() == moving.p3.getY()+1 and white.p3.getX() == moving.p3.getX():
+        white.move(0,-1)
+        moving.move(0,1)
+        return True
+    elif white.p3.getY() == moving.p3.getY()-1 and white.p3.getX() == moving.p3.getX():
+        white.move(0,1)
+        moving.move(0,-1)
+        return True
+    else:
+        
+        illegalMove.draw(win)
+        
+        return False
+            
+
+def main():
+    ###Setting up graphic window for the whole program and displaying welcome text and entry box stuff
+    win,welcomeText,playerNameText,playerNameEntryBox,submitButton,submitButtonText=firstGraphicWindow("The 8 Puzzle Game",
+                                                                                                       800,600,"white",0,0,8,6,4,5.75,"Welcome to The 8 Puzzle Game!",
+                                                                                                       "courier",4,5,"Player Name",4,4.75,6,3.5,3.875,4.5,
+                                                                                                       4.375,4,4.125,"Submit")##(FNC)
+    
+    ###Detecting when submit button is clicked
+    clickedPoint=win.getMouse()##(IMS)
+    if clickedPoint.getX()>=3.5 and clickedPoint.getX()<=4.5 and clickedPoint.getY()>=3.875 and clickedPoint.getY()<=4.375:
+        
+        #Getting text in entry box and opening file
+        playerName,playerNameLength,infile,infileRead=infileOpen(playerNameEntryBox)
+
+        #Telling the users high score that was typed
+        playerNameFinal=0
+        playerName1=1
+        for line in infileRead:
+            lineLength=len(line)
+            if line[0:playerNameLength] == playerName:
+                highscoreText,playerNameFinal,win,playerName1=lineInfileReadOne(line,playerNameLength,lineLength,playerName,win)
+
+                #Telling the user an error occurred for submittal
+                submitButton,submitButtonText,submitButtonError,submitButtonErrorText,win=submitError(submitButton,submitButtonText,win)
+
+                #Closing infile and going back to original screen
+                win,highscoreText,submitButtonError,submitButtonErrorText,submitButton,submitButtonText=introScreenReset(infile,win,highscoreText,
+                                                                                                                         submitButtonError,submitButtonErrorText)
+                
+        if playerNameFinal != playerName1:
+            playerNameFinal=0
+            
+    ###Testing other entries the user puts in after the first
+    while playerNameEntryBox.getText() == playerNameFinal:
+            
+        clickedPointThree=win.getMouse()
+        if clickedPointThree.getX()>=3.5 and clickedPointThree.getX()<=4.5 and clickedPointThree.getY()>=3.875 and clickedPointThree.getY()<=4.375:
+               
+            #Getting text in entry box and opening file
+            playerName,playerNameLength,infile,infileRead=infileOpen(playerNameEntryBox)
+
+            #Telling the users high score that was typed
+            for line in infileRead:
+                lineLength=len(line)
+                if line[0:playerNameLength] == playerName:
+                    highscoreText,playerNameFinal,win,playerName1=lineInfileReadOne(line,playerNameLength,lineLength,playerName,win)
+
+                    #Telling the user an error occurred for submittal
+                    submitButton,submitButtonText,submitButtonError,submitButtonErrorText,win=submitError(submitButton,submitButtonText,win)
+
+                    #Closing infile and going back to original screen
+                    win,highscoreText,submitButtonError,submitButtonErrorText,submitButton,submitButtonText=introScreenReset(infile,win,highscoreText,
+                                                                                                                             submitButtonError,submitButtonErrorText)
+                
+                
+            
+    ###Bring the user to the next screen
+    clickedPointFour=win.getMouse()
+    if clickedPointFour.getX()>=3.5 and clickedPointFour.getX()<=4.5 and clickedPointFour.getY()>=3.875 and clickedPointFour.getY()<=4.375:
+        
+        #Getting player name and undrawing intro screen and drawing second screen
+        playerName,directions,easyBox,easyBoxText,win=secondScreen(playerNameText,playerNameEntryBox,submitButton,submitButtonText,win)
+        
+        #Determing which difficulty is clicked
+        win,blockList,blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace=difficulty(win,directions,easyBox,easyBoxText)
+        
+        #Game time
+        moves=finalGame(win,blockList,blockOne,blockTwo,blockThree,blockFour,blockFive,blockSix,blockSeven,blockEight,whiteSpace)
+            
+        #Congratulations!!!!!!!!!!!!!!!!!!!!!!
+        congrats(playerName,moves,win)
+            
+
+
+
+
+main()
+
